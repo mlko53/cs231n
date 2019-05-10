@@ -10,10 +10,13 @@ class ConvMaskA(nn.Conv2d):
 
         out_c, in_c, HH, WW = self.weight.size()
         mask = torch.ones(out_c, in_c, HH, WW)
-        # create mask here
+        mask[:,:, HH // 2, WW // 2:] = 0
+        mask[:,:, (HH // 2 + 1):, :] = 0
+
+        self.mask =  mask
 
     def forward(self, x):
-        # update weight with mask here
+        self.weight.data *= self.mask
         return super(ConvMaskA, self).forward(x)
 
 
@@ -30,3 +33,11 @@ class ConvMaskB(nn.Conv2d):
     def forward(self, x):
         # update weight with mask here
         return super(ConvMaskB, self).forward(x)
+
+
+if __name__ == "__main__":
+    convMaskA = ConvMaskA(1, 1, 7, 1, 0)
+    x = torch.ones(1, 1, 7, 7)
+    print(convMaskA.weight.data[0,0,:,:])
+    print(convMaskA.mask[0,0,:,:])
+    print(convMaskA(x)[0,0,:,:])
