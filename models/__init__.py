@@ -1,2 +1,2 @@
-from models.pixelCNN import pixelCNN
+from models.PixelCNN import PixelCNN
 
