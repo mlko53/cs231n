@@ -1,0 +1,18 @@
+{
+    "batch_size": 64,
+    "benchmark": true,
+    "gpu_ids": [
+        0
+    ],
+    "lr": 0.001,
+    "max_grad_norm": -1.0,
+    "model": "PixelCNN",
+    "name": "debugging",
+    "num_channels": 512,
+    "num_epochs": 100,
+    "num_levels": 3,
+    "num_steps": 32,
+    "resume": false,
+    "save_dir": "experiments/PixelCNN/debugging",
+    "seed": 0
+}/n
