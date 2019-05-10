@@ -38,6 +38,40 @@ class ConvMaskB(nn.Conv2d):
         return super(ConvMaskB, self).forward(x)
 
 
+class ConvMaskABlock(nn.Module):
+    def __init__(self, in_channel, out_channel, kernel, stride, pad):
+        super(ConvMaskABlock, self).__init__()
+
+        self.net = nn.Sequential(
+            ConvMaskA(in_channel, out_channel, kernel, stride, pad),
+            nn.BatchNorm2d(out_channel)
+        )
+
+    def forward(self, x):
+        return self.net(x)
+
+
+class ConvMaskBBlock(nn.Module):
+    def __init__(self, h, kernel, stride, pad):
+        super(ConvMaskBBlock, self).__init__()
+
+        self.net = nn.Sequential(
+            nn.ReLU(),
+            nn.Conv2d(2*h, h, 1),
+            nn.BatchNorm2d(h),
+            nn.ReLU(),
+            ConvMaskB(h, h, kernel, stride, pad),
+            nn.BatchNorm2d(h),
+            nn.ReLU(),
+            nn.Conv2d(h, 2*h, 1),
+            nn.BatchNorm2d(2*h)
+        )
+        
+    def forward(self, x):
+        out = self.net(x) + x
+        return out
+
+
 if __name__ == "__main__":
     print("Testing Conv Mask A")
     convMaskA = ConvMaskA(1, 1, 7, 1, 0)
@@ -52,3 +86,13 @@ if __name__ == "__main__":
     print(convMaskB.weight.data[0,0,:,:])
     print(convMaskB.mask[0,0,:,:])
     print(convMaskA(x)[0,0,:,:])
+
+    print("Testing Conv Mask A Block")
+    convMaskABlock = ConvMaskABlock(1, 1, 7, 1, 0)
+    x = torch.randn(10, 1, 7, 7)
+    print(convMaskABlock(x))
+    
+    print("Testing Conv Mask B Block")
+    convMaskBBlock = ConvMaskBBlock(2, 3, 1, 1)
+    x = torch.randn(10, 4, 3, 3)
+    print(convMaskBBlock(x).shape)
