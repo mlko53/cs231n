@@ -11,7 +11,7 @@ class TrainArgParser(object):
         self.parser.add_argument("--save_dir", type=str, default='experiments/')
 
 	# model config
-        self.parser.add_argument('--model', default='pixelCNN', type=str, choices=['pixelCNN', 'glow'])
+        self.parser.add_argument('--model', default='PixelCNN', type=str, choices=['PixelCNN', 'Glow'])
         self.parser.add_argument('--num_channels', '-C', default=512, type=int, help='Number of channels in hidden layers')
         self.parser.add_argument('--num_levels', '-L', default=3, type=int, help='Number of levels in the Glow model')
         self.parser.add_argument('--num_steps', '-K', default=32, type=int, help='Number of steps of flow in each level')
