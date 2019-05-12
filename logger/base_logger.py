@@ -1,25 +1,25 @@
 import os
-import util
 
 from datetime import datetime
 from tensorboardX import SummaryWriter
 
 
 class BaseLogger(object):
-    def __init__(self, args, start_epoch, global_step, dataset_len, device, is_training=False):
+    def __init__(self, args, start_epoch, global_step):
         
         def round_down(x, m):
             """Round x down to a multiple of m."""
             return int(m * round(float(x) / m))
 
         self.batch_size = args.batch_size
-        self.dataset_len = dataset_len
-        self.device = device
         self.save_dir = args.save_dir
-        log_dir = os.path.join('logs', args.name + '_' + datetime.now()/strftime('%b%d_%H%M'))
+        self.log_path = os.path.join(self.save_dir, '{}.log'.format(args.name))
+        log_dir = os.path.join('logs', args.name + '_' + datetime.now().strftime('%b%d_%H%M'))
         self.summary_writer = SummaryWriter(log_dir = log_dir)
 
+        self.iters_per_print = args.iters_per_print
         self.epoch = start_epoch
+        self.iter = 0
         self.global_step = global_step
         self.iter_start_time = None
         self.epoch_start_time = None

@@ -9,6 +9,7 @@ import torch.optim as optim
 
 from args import TrainArgParser
 from dataloader import get_dataloader
+from logger import TrainLogger
 from tqdm import tqdm
 import models
 
@@ -49,24 +50,35 @@ def main(args):
         #model = nn.DataParallel(model, args.gpu_ids)
     model = model.to(device)
 
-    # Optimizer
-    optimizer = optim.Adam(model.parameters(), lr=args.lr)
-
     # Data loaders
     train_loader = get_dataloader(args, "train")
     val_loader = get_dataloader(args, "val")
 
+    # Optimizer
+    optimizer = optim.Adam(model.parameters(), lr=args.lr)
+
+    # Logger
     start_epoch = 0
     global_step = start_epoch * len(train_loader)
+    logger = TrainLogger(args, start_epoch, global_step)
+
     for i in range(start_epoch, args.num_epochs):
         model.train()
+        logger.start_epoch()
         for image, label in train_loader:
+            logger.start_iter()
+
             image = image.to(device)
             optimizer.zero_grad()
             output = model(image)
             loss = model.loss(output, image)
             loss.backward()
             optimizer.step()
+
+            logger.log_iter(loss)
+            logger.end_iter()
+
+        logger.end_epoch({}, optimizer)
 
 
 if __name__ == '__main__':

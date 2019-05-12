@@ -27,6 +27,9 @@ class TrainArgParser(object):
         self.parser.add_argument('--resume', type=bool, default=False, help='Resume from checkpoint')
         self.parser.add_argument('--seed', type=int, default=0, help='Random seed for reproducibility')
 
+        # logger config
+        self.parser.add_argument('--iters_per_print', default=1, type=int, help='Number of iters per print')
+
         # device config
         self.parser.add_argument('--benchmark', type=bool, default=True, help='Turn on CUDNN benchmarking')
         self.parser.add_argument('--gpu_ids', default=[0], type=eval, help='IDs of GPUs to use')
