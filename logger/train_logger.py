@@ -2,6 +2,7 @@ import numpy as np
 import os
 import sys
 from time import time
+import torch
 
 from datetime import datetime
 from tensorboardX import SummaryWriter
@@ -79,13 +80,24 @@ class TrainLogger(BaseLogger):
         self.epoch += 1
 
     
-    def has_improved(self):
-        """Reports whether this epochs loss has improved since the last"""
+    def has_improved(self, model):
+        """
+        Reports whether this epochs loss has improved since the last
+        Saves model if improvement
+        """
         last_epoch_loss = self.val_loss_meter.avg
         isBetter = last_epoch_loss < self.val_best_loss
         if isBetter:
             self.val_best_loss = last_epoch_loss
             self.notImprovedCounter = 0
+            # save model
+            print("Saving...")
+            state = {
+                'model': model.state_dict(),
+                'val_loss': self.val_loss_meter.avg,
+                'epoch': self.epoch
+            }
+            torch.save(state, os.path.join(self.save_dir, 'best.pth.tar'))
         else:
             self.notImprovedCounter += 1
 

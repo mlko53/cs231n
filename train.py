@@ -87,7 +87,7 @@ def main(args):
             loss = model.loss(output, image)
             logger.val_loss_meter.update(loss)
 
-        logger.has_improved()
+        logger.has_improved(model)
         logger.end_epoch({'val-loss': logger.val_loss_meter.avg}, optimizer)
 
 
