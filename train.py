@@ -63,6 +63,8 @@ def main(args):
     logger = TrainLogger(args, start_epoch, global_step)
 
     for i in range(start_epoch, args.num_epochs):
+
+        # Train
         model.train()
         logger.start_epoch()
         for image, label in train_loader:
@@ -78,7 +80,15 @@ def main(args):
             logger.log_iter(loss)
             logger.end_iter()
 
-        logger.end_epoch({}, optimizer)
+        # Eval
+        model.eval()
+        for image, _ in val_loader:
+            image = image.to(device)
+            loss = model.loss(output, image)
+            logger.val_loss_meter.update(loss)
+
+        logger.has_improved()
+        logger.end_epoch({'val-loss': logger.val_loss_meter.avg}, optimizer)
 
 
 if __name__ == '__main__':

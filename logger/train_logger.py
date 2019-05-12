@@ -17,8 +17,9 @@ class TrainLogger(BaseLogger):
         self.metric_logs = {}
         self.metric_logs['loss'] = []
 
-        self.best_loss = sys.maxsize
+        self.val_best_loss = sys.maxsize
         self.loss_meter = AverageMeter()
+        self.val_loss_meter = AverageMeter()
 
         self.notImprovedCounter = 0
 
@@ -26,7 +27,6 @@ class TrainLogger(BaseLogger):
     def start_iter(self):
         """Log info for start of an iteration."""
         self.iter_start_time = time()
-        self.loss_meter.reset()
 
 
     def log_iter(self, batch_loss):
@@ -34,7 +34,7 @@ class TrainLogger(BaseLogger):
         if self.iter % self.iters_per_print == 0:
 
             avg_time = time() - self.iter_start_time
-            message = '[epoch: {}, iter: {}, time: {:.2f}, loss: {:.3g}]' \
+            message = '[epoch: {}, iter: {}, time: {:.2f}, loss: {:.5g}]' \
                 .format(self.epoch, self.iter, avg_time, 
                         batch_loss)
 
@@ -56,6 +56,8 @@ class TrainLogger(BaseLogger):
         self.epoch_start_time = time()
         self.iter = 0
         self.write('[start of epoch {}]'.format(self.epoch))
+        self.loss_meter.reset()
+        self.val_loss_meter.reset()
 
 
     def end_epoch(self, metrics, optimizer):
@@ -64,10 +66,11 @@ class TrainLogger(BaseLogger):
             metrics: Dictionary of metric values. Items have format '{phase}_{metric}': value.
             optimizer: Optimizer for the model.
         """
-        self.write('[end of epoch {}, epoch time: {:.2g}, average epoch loss: {:.3g}, best epoch loss: {:.3g}, not Improved for {} epochs, lr: {}]'
+        self.write('[end of epoch {}, epoch time: {:.2g}, loss: {:.5g}, val-loss: {:.5g}, best val-loss: {:.5g}, not Improved for {} epochs, lr: {}]'
                    .format(self.epoch, time() - self.epoch_start_time, 
                            self.loss_meter.avg, 
-                           self.best_loss, 
+                           self.val_loss_meter.avg,
+                           self.val_best_loss, 
                            self.notImprovedCounter, 
                            optimizer.param_groups[0]['lr']))
         if metrics is not None:
@@ -78,10 +81,10 @@ class TrainLogger(BaseLogger):
     
     def has_improved(self):
         """Reports whether this epochs loss has improved since the last"""
-        last_epoch_loss = self.loss_meter.avg
-        isBetter = last_epoch_loss < self.best_loss
+        last_epoch_loss = self.val_loss_meter.avg
+        isBetter = last_epoch_loss < self.val_best_loss
         if isBetter:
-            self.best_loss = last_epoch_loss
+            self.val_best_loss = last_epoch_loss
             self.notImprovedCounter = 0
         else:
             self.notImprovedCounter += 1
