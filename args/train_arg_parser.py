@@ -12,7 +12,6 @@ class TrainArgParser(object):
 
         # dataset config
         self.parser.add_argument("--dataset", type=str, default='random')
-        self.parser.add_argument("--split", type=str, default='train', choices=['train', 'val', 'test'])
 
 	# model config
         self.parser.add_argument('--model', default='PixelCNN', type=str, choices=['PixelCNN', 'Glow'])

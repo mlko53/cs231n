@@ -3,10 +3,10 @@ import torch.utils.data as data
 from .randomDataset import RandomDataset
 
 
-def get_dataloader(args):
+def get_dataloader(args, split):
 
     if args.dataset == "random":
-        dataset = RandomDataset(args.split)
+        dataset = RandomDataset(split)
     else:
         raise ValueError("Dataset is not supported")
 

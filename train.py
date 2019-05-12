@@ -2,11 +2,13 @@ import copy
 import json
 import numpy as np
 import random
+import time
 import torch
 import torch.nn as nn
 
 from args import TrainArgParser
 from dataloader import get_dataloader
+from tqdm import tqdm
 import models
 
 
@@ -43,7 +45,14 @@ def main(args):
         model = nn.DataParallel(model, args.gpu_ids)
     model = model.to(device)
     
-    loader = get_dataloader(args)
+    train_loader = get_dataloader(args, "train")
+    val_loader = get_dataloader(args, "val")
+
+    start_epoch = 0
+    for i in range(start_epoch, args.num_epochs):
+        for image, label in tqdm(train_loader):
+            output = model(image)
+
 
 if __name__ == '__main__':
     parser = TrainArgParser()
