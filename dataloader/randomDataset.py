@@ -11,7 +11,7 @@ class RandomDataset(data.Dataset):
         self.data = self.data.float() / 256.
 
     def __len__(self):
-        return 1000
+        return 10
 
     def __getitem__(self, index):
         x = self.data[index]

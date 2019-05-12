@@ -5,6 +5,7 @@ import random
 import time
 import torch
 import torch.nn as nn
+import torch.optim as optim
 
 from args import TrainArgParser
 from dataloader import get_dataloader
@@ -48,15 +49,24 @@ def main(args):
         #model = nn.DataParallel(model, args.gpu_ids)
     model = model.to(device)
 
+    # Optimizer
+    optimizer = optim.Adam(model.parameters(), lr=args.lr)
+
+    # Data loaders
     train_loader = get_dataloader(args, "train")
     val_loader = get_dataloader(args, "val")
 
     start_epoch = 0
+    global_step = start_epoch * len(train_loader)
     for i in range(start_epoch, args.num_epochs):
-        for image, label in tqdm(train_loader):
+        model.train()
+        for image, label in train_loader:
             image = image.to(device)
+            optimizer.zero_grad()
             output = model(image)
             loss = model.loss(output, image)
+            loss.backward()
+            optimizer.step()
 
 
 if __name__ == '__main__':
