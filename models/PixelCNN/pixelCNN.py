@@ -12,13 +12,15 @@ class PixelCNN(nn.Module):
 
     """
 
-    def __init__(self, args):
+    def __init__(self, args, device):
         super(PixelCNN, self).__init__()
-        self.conv_mask_A = ConvMaskABlock(3, args.num_channels, 7, 1, 3)
+        self.device = device
+        self.conv_mask_A = ConvMaskABlock(3, args.num_channels, 7, 1, 3, self.device)
 
         self.conv_mask_Bs = []
         for i in range(args.num_levels):
-            self.conv_mask_Bs.append(ConvMaskBBlock(args.num_channels // 2, 3, 1, 1))
+            self.conv_mask_Bs.append(ConvMaskBBlock(args.num_channels // 2, 3, 1, 1, self.device))
+        self.conv_mask_Bs = nn.Sequential(*self.conv_mask_Bs)
         
         self.out = nn.Sequential(
             nn.ReLU(),
@@ -30,7 +32,6 @@ class PixelCNN(nn.Module):
 
     def forward(self, x):
         out = self.conv_mask_A(x)
-        for conv_mask_B in self.conv_mask_Bs:
-            out = conv_mask_B(out)
+        out = self.conv_mask_Bs(out)
         out = self.out(out)
         return out

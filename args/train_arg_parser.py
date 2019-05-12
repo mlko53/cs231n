@@ -15,13 +15,13 @@ class TrainArgParser(object):
 
 	# model config
         self.parser.add_argument('--model', default='PixelCNN', type=str, choices=['PixelCNN', 'Glow'])
-        self.parser.add_argument('--num_channels', '-C', default=512, type=int, help='Number of channels in hidden layers')
+        self.parser.add_argument('--num_channels', '-C', default=128, type=int, help='Number of channels in hidden layers')
         self.parser.add_argument('--num_levels', '-L', default=3, type=int, help='Number of levels in the Glow model')
         self.parser.add_argument('--num_steps', '-K', default=32, type=int, help='Number of steps of flow in each level')
 
         # train config
         self.parser.add_argument('--num_epochs', default=100, type=int, help='Number of epochs to train')
-        self.parser.add_argument('--batch_size', default=64, type=int, help='Batch size per GPU')
+        self.parser.add_argument('--batch_size', default=16, type=int, help='Batch size per GPU')
         self.parser.add_argument('--lr', default=1e-3, type=float, help='Learning rate')
         self.parser.add_argument('--max_grad_norm', type=float, default=-1., help='Max gradient norm for clipping')
         self.parser.add_argument('--resume', type=bool, default=False, help='Resume from checkpoint')
