@@ -5,7 +5,7 @@ from .randomDataset import RandomDataset
 
 def get_dataloader(args):
 
-    if arg.dataset == "random":
+    if args.dataset == "random":
         dataset = RandomDataset(args.split)
     else:
         raise ValueError("Dataset is not supported")

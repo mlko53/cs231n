@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 
 from args import TrainArgParser
+from dataloader import get_dataloader
 import models
 
 
@@ -41,6 +42,8 @@ def main(args):
         model = model_fn(args)
         model = nn.DataParallel(model, args.gpu_ids)
     model = model.to(device)
+    
+    loader = get_dataloader(args)
 
 if __name__ == '__main__':
     parser = TrainArgParser()
