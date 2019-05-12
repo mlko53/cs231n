@@ -27,11 +27,24 @@ class PixelCNN(nn.Module):
             nn.Conv2d(args.num_channels, 1024, 1, 1, 0),
             nn.BatchNorm2d(1024),
             nn.ReLU(),
-            nn.Conv2d(1024, 3, 1, 1, 0)
+            nn.Conv2d(1024, 3*256, 1, 1, 0)
         )
 
+        self.loss_fn = nn.CrossEntropyLoss()
+
     def forward(self, x):
+        N, C, H, W = x.shape
         out = self.conv_mask_A(x)
         out = self.conv_mask_Bs(out)
         out = self.out(out)
+        out = out.view(N, C, 256, H, W)
+        out = out.permute(0, 1, 3, 4, 2)
         return out
+
+    def loss(self, out, x):
+        out = out.contiguous()
+        logit = out.view(-1, 256)
+        target = x.view(-1)
+        target = (target * 256.).long()
+        loss = self.loss_fn(logit, target)
+        return loss

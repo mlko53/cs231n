@@ -7,7 +7,8 @@ class RandomDataset(data.Dataset):
     def __init__(self, split):
         super(RandomDataset, self).__init__()
         self.split = split
-        self.data = torch.randn(1000, 3, 224, 244)
+        self.data = torch.empty(1000, 3, 32, 32, dtype=torch.long).random_(256)
+        self.data = self.data.float() / 256.
 
     def __len__(self):
         return 1000

@@ -45,7 +45,7 @@ def main(args):
     else:
         model_fn = models.__dict__[args.model]
         model = model_fn(args, device)
-        model = nn.DataParallel(model, args.gpu_ids)
+        #model = nn.DataParallel(model, args.gpu_ids)
     model = model.to(device)
 
     train_loader = get_dataloader(args, "train")
@@ -56,7 +56,7 @@ def main(args):
         for image, label in tqdm(train_loader):
             image = image.to(device)
             output = model(image)
-            print(output.shape)
+            loss = model.loss(output, image)
 
 
 if __name__ == '__main__':
