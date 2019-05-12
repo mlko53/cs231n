@@ -6,9 +6,9 @@ from .randomDataset import RandomDataset
 def get_dataloader(args):
 
     if arg.dataset == "random":
-        dataset = RandomDataset()
+        dataset = RandomDataset(args.split)
     else:
-        throw ValueError("Dataset is not supported")
+        raise ValueError("Dataset is not supported")
 
     loader = data.DataLoader(dataset, batch_size=args.batch_size, 
                              shuffle=True, num_workers=8)

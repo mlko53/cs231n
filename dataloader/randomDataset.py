@@ -4,8 +4,9 @@ from torch.utils import data
 
 class RandomDataset(data.Dataset):
     """Dataset of random 224x224 images"""
-    def __init__(self):
+    def __init__(self, split):
         super(RandomDataset, self).__init__()
+        self.split = split
 
     def __len__(self):
         return 1000
