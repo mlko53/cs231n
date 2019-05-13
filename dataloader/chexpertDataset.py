@@ -9,12 +9,12 @@ from torch.utils import data
 import torchvision.transforms as transforms
 
 
-DATA_DIR = Path("/home/drgnelement/project/cs231n/data")
+DATA_DIR = Path("/deep/group/CheXpert")
 CHEXPERT_DIR = DATA_DIR / "CheXpert-v1.0-small"
 
 class ChexpertDataset(data.Dataset):
     """Dataset of random 224x224 images"""
-    def __init__(self, split):
+    def __init__(self, split, batch_size):
         super(ChexpertDataset, self).__init__()
         self.split = split
         assert split == "train" or split == "val", "Invalid split"
@@ -32,7 +32,7 @@ class ChexpertDataset(data.Dataset):
             transforms.ToTensor()
         ])
 
-        self.df = self.df[:-(len(self.df)%16)]
+        self.df = self.df[:-(len(self.df)%batch_size)]
         print(len(self.df))
         
     def __len__(self):
