@@ -50,7 +50,7 @@ def main(args):
     model = model.to(device)
 
     # Loss fn
-    loss_fn = get_loss(args.model)
+    loss_fn = get_loss(args.model).to(device)
 
     # Data loaders
     train_loader = get_dataloader(args, "train")
@@ -93,11 +93,13 @@ def main(args):
             logger.end_iter()
 
         # Eval
-        model.eval()
-        for image in tqdm(val_loader):
-            image = image.to(device)
-            loss = loss_fn(output, image)
-            logger.val_loss_meter.update(loss)
+        with torch.no_grad():
+            model.eval()
+            for image in tqdm(val_loader):
+                image = image.to(device)
+                output = model(image)
+                loss = loss_fn(output, image)
+                logger.val_loss_meter.update(loss)
 
         logger.has_improved(model)
         logger.end_epoch({'val-loss': logger.val_loss_meter.avg}, optimizer)
