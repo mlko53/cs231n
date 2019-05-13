@@ -95,7 +95,7 @@ class TrainLogger(BaseLogger):
             state = {
                 'model': model.state_dict(),
                 'val_loss': self.val_loss_meter.avg,
-                'epoch': self.epoch
+                'epoch': self.epoch + 1
             }
             torch.save(state, os.path.join(self.save_dir, 'best.pth.tar'))
         else:

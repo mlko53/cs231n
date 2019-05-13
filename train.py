@@ -3,6 +3,7 @@ import json
 import numpy as np
 import random
 import time
+import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -42,12 +43,9 @@ def main(args):
 
     # Build Model
     print("Building model...")
-    if args.resume:
-        pass
-    else:
-        model_fn = models.__dict__[args.model]
-        model = model_fn(args, device)
-        #model = nn.DataParallel(model, args.gpu_ids)
+    model_fn = models.__dict__[args.model]
+    model = model_fn(args, device)
+    #model = nn.DataParallel(model, args.gpu_ids)
     model = model.to(device)
 
     # Data loaders
@@ -57,10 +55,20 @@ def main(args):
     # Optimizer
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
-    # Logger
-    start_epoch = 0
-    global_step = start_epoch * len(train_loader)
-    logger = TrainLogger(args, start_epoch, global_step)
+    # Logger and Resume
+    if args.resume:
+        resume_path = os.path.join(args.save_dir, "best.pth.tar")
+        print("Resuming from checkpoint at {}".format(resume_path))
+        checkpoint = torch.load(resume_path)
+        model.load_state_dict(checkpoint['model'])
+        start_epoch = checkpoint['epoch']
+        global_step = start_epoch * len(train_loader)
+        logger = TrainLogger(args, start_epoch, global_step)
+        logger.best_val_loss = checkpoint['val_loss']
+    else:
+        start_epoch = 0
+        global_step = 0
+        logger = TrainLogger(args, start_epoch, global_step)
 
     for i in range(start_epoch, args.num_epochs):
 
