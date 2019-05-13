@@ -6,6 +6,7 @@ import time
 import os
 import torch
 import torch.nn as nn
+import torch.nn.utils as utils
 import torch.optim as optim
 
 from args import TrainArgParser
@@ -87,6 +88,8 @@ def main(args):
             output = model(image)
             loss = loss_fn(output, image)
             loss.backward()
+            for group in optimizer.param_groups:
+                utils.clip_grad_norm_(group['params'], args.max_grad_norm, 2)
             optimizer.step()
 
             logger.log_iter(loss)
