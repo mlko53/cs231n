@@ -79,7 +79,7 @@ def main(args):
         # Train
         model.train()
         logger.start_epoch()
-        for image, label in train_loader:
+        for image in train_loader:
             logger.start_iter()
 
             image = image.to(device)
@@ -94,7 +94,7 @@ def main(args):
 
         # Eval
         model.eval()
-        for image, _ in val_loader:
+        for image in tqdm(val_loader):
             image = image.to(device)
             loss = loss_fn(output, image)
             logger.val_loss_meter.update(loss)

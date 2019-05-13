@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from masks import ConvMaskABlock, ConvMaskBBlock
+from .masks import ConvMaskABlock, ConvMaskBBlock
 
 
 class PixelCNN(nn.Module):

@@ -1,5 +1,6 @@
 import torch.utils.data as data
 
+from .chexpertDataset import ChexpertDataset
 from .randomDataset import RandomDataset
 
 
@@ -7,6 +8,8 @@ def get_dataloader(args, split):
 
     if args.dataset == "random":
         dataset = RandomDataset(split)
+    elif args.dataset == "chexpert":
+        dataset = ChexpertDataset(split)
     else:
         raise ValueError("Dataset is not supported")
 

@@ -11,7 +11,7 @@ class TrainArgParser(object):
         self.parser.add_argument("--save_dir", type=str, default='experiments/')
 
         # dataset config
-        self.parser.add_argument("--dataset", type=str, default='random')
+        self.parser.add_argument("--dataset", type=str, default='chexpert', choices=['random', 'chexpert'])
 
 	# model config
         self.parser.add_argument('--model', default='PixelCNN', type=str, choices=['PixelCNN', 'Glow'])

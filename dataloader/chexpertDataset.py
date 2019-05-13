@@ -6,6 +6,8 @@ import torch
 
 from PIL import Image
 from torch.utils import data
+import torchvision.transforms as transforms
+
 
 DATA_DIR = Path("/home/drgnelement/project/cs231n/data")
 CHEXPERT_DIR = DATA_DIR / "CheXpert-v1.0-small"
@@ -21,13 +23,24 @@ class ChexpertDataset(data.Dataset):
             self.df = pd.read_csv(CHEXPERT_DIR / "train.csv")
         elif self.split ==  "val":
             self.df = pd.read_csv(CHEXPERT_DIR / "valid.csv")
+
+        # Filter only frontal images
+        self.df = self.df[self.df['Frontal/Lateral'] == 'Frontal']
+
+        self.transforms = transforms.Compose([
+            transforms.RandomCrop((224, 224)),
+            transforms.ToTensor()
+        ])
+
+        self.df = self.df[:-(len(self.df)%16)]
+        print(len(self.df))
         
     def __len__(self):
         return len(self.df)
 
     def __getitem__(self, index):
-        x = Image.open(DATA_DIR / self.df.iloc[index]["Path"]).convert("RGB")
+        x = self.transforms(Image.open(DATA_DIR / self.df.iloc[index]["Path"]).convert("RGB"))
         # TODO implement label indexing
         y = None
 
-        return x, y
+        return x
