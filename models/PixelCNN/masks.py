@@ -13,7 +13,7 @@ class ConvMaskA(nn.Conv2d):
         mask[:,:, HH // 2, WW // 2:] = 0
         mask[:,:, (HH // 2 + 1):, :] = 0
 
-        self.mask =  mask.to(device)
+        self.register_buffer('mask', mask)
 
     def forward(self, x):
         self.weight.data *= self.mask
@@ -31,7 +31,7 @@ class ConvMaskB(nn.Conv2d):
         mask[:,:, HH // 2, (WW // 2 + 1):] = 0
         mask[:,:, (HH // 2 + 1):, :] = 0
 
-        self.mask = mask.to(device)
+        self.register_buffer('mask', mask)
 
     def forward(self, x):
         self.weight.data *= self.mask

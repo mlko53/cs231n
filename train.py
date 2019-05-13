@@ -11,6 +11,7 @@ import torch.optim as optim
 from args import TrainArgParser
 from dataloader import get_dataloader
 from logger import TrainLogger
+from loss import get_loss
 from tqdm import tqdm
 import models
 
@@ -45,8 +46,11 @@ def main(args):
     print("Building model...")
     model_fn = models.__dict__[args.model]
     model = model_fn(args, device)
-    #model = nn.DataParallel(model, args.gpu_ids)
+    model = nn.DataParallel(model, args.gpu_ids)
     model = model.to(device)
+
+    # Loss fn
+    loss_fn = get_loss(args.model)
 
     # Data loaders
     train_loader = get_dataloader(args, "train")
@@ -81,7 +85,7 @@ def main(args):
             image = image.to(device)
             optimizer.zero_grad()
             output = model(image)
-            loss = model.loss(output, image)
+            loss = loss_fn(output, image)
             loss.backward()
             optimizer.step()
 
@@ -92,7 +96,7 @@ def main(args):
         model.eval()
         for image, _ in val_loader:
             image = image.to(device)
-            loss = model.loss(output, image)
+            loss = loss_fn(output, image)
             logger.val_loss_meter.update(loss)
 
         logger.has_improved(model)

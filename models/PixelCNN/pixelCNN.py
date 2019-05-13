@@ -40,11 +40,3 @@ class PixelCNN(nn.Module):
         out = out.view(N, C, 256, H, W)
         out = out.permute(0, 1, 3, 4, 2)
         return out
-
-    def loss(self, out, x):
-        out = out.contiguous()
-        logit = out.view(-1, 256)
-        target = x.view(-1)
-        target = (target * 256.).long()
-        loss = self.loss_fn(logit, target)
-        return loss
