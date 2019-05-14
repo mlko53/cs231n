@@ -18,10 +18,33 @@ import os
 def get_sampler(model, num_samples, batch_size, size, save_dir, device):
     if model == "PixelCNN":
         sampler = PixelCNNSampler(num_samples, batch_size, size, save_dir, device)
+    elif model == "Glow":
+        sampler = GlowSampler(num_samples, batch_size, size, save_dir, device)
     else:
         raise ValueError()
 
     return sampler
+
+
+class GlowSampler(object):
+    def __init__(self, num_samples, batch_size, size, save_dir, device):
+        self.batch_size = batch_size
+        self.size = size
+        self.num_samples = num_samples 
+        self.save_dir = save_dir
+        self.device = device
+    
+    def sample(self, model, epoch, iter):
+        with torch.no_grad():
+            model.eval()
+            for i in range(self.num_samples):
+                print("Sample{}".format(i))
+                z = torch.randn((self.batch_size, 3, self.size, self.size), dtype=torch.float32, device=self.device)
+                sample, _ = model(z, reverse=True)
+                sample = torch.sigmoid(sample)
+
+                image_path = os.path.join(self.save_dir, "epoch{}_iter{}_sample{}.png".format(epoch, iter, i))
+                save_image(sample, image_path, nrow=4)
 
 
 class PixelCNNSampler(object):

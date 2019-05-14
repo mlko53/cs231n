@@ -77,7 +77,7 @@ def main(args):
         logger = TrainLogger(args, start_epoch, global_step)
 
     # Sampler
-    sampler = get_sampler(args.model, 1, 16, args.size, args.save_dir, device)
+    sampler = get_sampler(args.model, 5, 4, args.size, args.save_dir, device)
 
     for i in range(start_epoch, args.num_epochs):
 
@@ -87,7 +87,7 @@ def main(args):
         for j, image in enumerate(train_loader):
 
             # Sample
-            if j % 1000 == 0:
+            if j % 500 == 0:
                 print("Sampling...")
                 sampler.sample(model, i, j)
 
