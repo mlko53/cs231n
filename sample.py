@@ -17,28 +17,29 @@ import os
 
 
 class PixelCNNSampler(object):
-    def __init__(self, num_samples, batch_size, save_dir, device):
+    def __init__(self, num_samples, batch_size, size, save_dir, device):
         self.batch_size = batch_size
+        self.size = size
         self.num_samples = num_samples 
         self.save_dir = save_dir
         self.device = device
 
-    def sample(self, model, epoch):
+    def sample(self, model, epoch, iter):
         with torch.no_grad():
             model.eval()
             for i in range(self.num_samples):
                 print("Sample{}".format(i))
-                sample = torch.zeros(self.batch_size, 3, 64, 64).to(device)
-                for x in tqdm(range(64)):
-                    for y in range(64):
+                sample = torch.zeros(self.batch_size, 3, self.size, self.size).to(self.device)
+                for x in tqdm(range(self.size)):
+                    for y in range(self.size):
                         out = model(Variable(sample))
                         probs = F.softmax(out[:,:,x,y], dim=2).data
                         for c in range(3):
                             pixel = torch.multinomial(probs[:,c], 1).float() / 255.
                             sample[:,c,x,y] = pixel[:,0]
 
-                image_path = os.path.join(self.save_dir, "epoch{}_sample{}.png".format(epoch, i))
-                save_image(sample, image_path, nrow=3)
+                image_path = os.path.join(self.save_dir, "epoch{}_iter{}_sample{}.png".format(epoch, iter, i))
+                save_image(sample, image_path, nrow=4)
         
 if __name__ == '__main__':
     parser = TrainArgParser()

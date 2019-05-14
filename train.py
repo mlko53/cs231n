@@ -55,8 +55,8 @@ def main(args):
     loss_fn = get_loss(args.model).to(device)
 
     # Data loaders
-    train_loader = get_dataloader(args, "train", args.size)
-    val_loader = get_dataloader(args, "val", args.size)
+    train_loader = get_dataloader(args, "train")
+    val_loader = get_dataloader(args, "val")
 
     # Optimizer
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
@@ -76,17 +76,21 @@ def main(args):
         global_step = 0
         logger = TrainLogger(args, start_epoch, global_step)
 
-    for i in range(start_epoch, args.num_epochs):
+    # Sampler
+    sampler = PixelCNNSampler(1, 16, args.size, args.save_dir, device)
 
-        # Sample
-        print("Sampling...")
-        sampler = PixelCNNSampler(1, 9, args.save_dir, device)
-        sampler.sample(model, i)
+    for i in range(start_epoch, args.num_epochs):
 
         # Train
         model.train()
         logger.start_epoch()
-        for image in train_loader:
+        for j, image in enumerate(train_loader):
+
+            # Sample
+            if j % 1000 == 0:
+                print("Sampling...")
+                sampler.sample(model, i, j)
+
             logger.start_iter()
 
             image = image.to(device)
