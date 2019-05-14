@@ -15,6 +15,14 @@ import numpy as np
 import random
 import os
 
+def get_sampler(model, num_samples, batch_size, size, save_dir, device):
+    if model == "PixelCNN":
+        sampler = PixelCNNSampler(num_samples, batch_size, size, save_dir, device)
+    else:
+        raise ValueError()
+
+    return sampler
+
 
 class PixelCNNSampler(object):
     def __init__(self, num_samples, batch_size, size, save_dir, device):

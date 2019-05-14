@@ -13,7 +13,7 @@ from args import TrainArgParser
 from dataloader import get_dataloader
 from logger import TrainLogger
 from loss import get_loss
-from sample import PixelCNNSampler
+from sample import get_sampler
 from tqdm import tqdm
 import models
 
@@ -77,7 +77,7 @@ def main(args):
         logger = TrainLogger(args, start_epoch, global_step)
 
     # Sampler
-    sampler = PixelCNNSampler(1, 16, args.size, args.save_dir, device)
+    sampler = get_sampler(args.model, 1, 16, args.size, args.save_dir, device)
 
     for i in range(start_epoch, args.num_epochs):
 
