@@ -29,7 +29,7 @@ class ChexpertDataset(data.Dataset):
         self.df = self.df[self.df['Frontal/Lateral'] == 'Frontal']
 
         self.transforms = transforms.Compose([
-            transforms.RandomCrop((224, 224)),
+            transforms.RandomCrop((320, 320)),
             transforms.Resize((size, size)),
             transforms.ToTensor()
         ])
