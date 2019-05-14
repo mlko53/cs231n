@@ -13,6 +13,7 @@ from args import TrainArgParser
 from dataloader import get_dataloader
 from logger import TrainLogger
 from loss import get_loss
+from sample import PixelCNNSampler
 from tqdm import tqdm
 import models
 
@@ -54,8 +55,8 @@ def main(args):
     loss_fn = get_loss(args.model).to(device)
 
     # Data loaders
-    train_loader = get_dataloader(args, "train")
-    val_loader = get_dataloader(args, "val")
+    train_loader = get_dataloader(args, "train", args.size)
+    val_loader = get_dataloader(args, "val", args.size)
 
     # Optimizer
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
@@ -76,6 +77,11 @@ def main(args):
         logger = TrainLogger(args, start_epoch, global_step)
 
     for i in range(start_epoch, args.num_epochs):
+
+        # Sample
+        print("Sampling...")
+        sampler = PixelCNNSampler(1, 9, args.save_dir, device)
+        sampler.sample(model, i)
 
         # Train
         model.train()

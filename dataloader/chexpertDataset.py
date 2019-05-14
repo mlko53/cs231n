@@ -14,9 +14,10 @@ CHEXPERT_DIR = DATA_DIR / "CheXpert-v1.0-small"
 
 class ChexpertDataset(data.Dataset):
     """Dataset of random 224x224 images"""
-    def __init__(self, split, batch_size):
+    def __init__(self, split, batch_size, size):
         super(ChexpertDataset, self).__init__()
         self.split = split
+        self.size = size
         assert split == "train" or split == "val", "Invalid split"
 
         if self.split == "train":
@@ -29,6 +30,7 @@ class ChexpertDataset(data.Dataset):
 
         self.transforms = transforms.Compose([
             transforms.RandomCrop((224, 224)),
+            transforms.Resize((size, size)),
             transforms.ToTensor()
         ])
 
