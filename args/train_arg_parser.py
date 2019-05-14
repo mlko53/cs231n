@@ -24,7 +24,7 @@ class TrainArgParser(object):
         self.parser.add_argument('--num_epochs', default=100, type=int, help='Number of epochs to train')
         self.parser.add_argument('--batch_size', default=16, type=int, help='Batch size per GPU')
         self.parser.add_argument('--lr', default=1e-3, type=float, help='Learning rate')
-        self.parser.add_argument('--max_grad_norm', type=float, default=-1., help='Max gradient norm for clipping')
+        self.parser.add_argument('--max_grad_norm', type=float, default=2., help='Max gradient norm for clipping')
         self.parser.add_argument('--resume', type=bool, default=False, help='Resume from checkpoint')
         self.parser.add_argument('--seed', type=int, default=0, help='Random seed for reproducibility')
 
