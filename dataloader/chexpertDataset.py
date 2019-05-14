@@ -32,8 +32,8 @@ class ChexpertDataset(data.Dataset):
         self.transforms = transforms.Compose([
             transforms.RandomCrop((320, 320)),
             transforms.Resize((size, size)),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=CHEXPERT_MEAN, std=CHEXPERT_STD)
+            transforms.ToTensor()
+            #transforms.Normalize(mean=CHEXPERT_MEAN, std=CHEXPERT_STD)
         ])
 
         self.df = self.df[:-(len(self.df)%batch_size)]
