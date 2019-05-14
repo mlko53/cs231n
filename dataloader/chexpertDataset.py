@@ -8,9 +8,10 @@ from PIL import Image
 from torch.utils import data
 import torchvision.transforms as transforms
 
-
 DATA_DIR = Path("/deep/group/CheXpert")
 CHEXPERT_DIR = DATA_DIR / "CheXpert-v1.0-small"
+CHEXPERT_MEAN = [.5020, .5020, .5020]
+CHEXPERT_STD = [.085585, .085585, .085585]
 
 class ChexpertDataset(data.Dataset):
     """Dataset of random 224x224 images"""
@@ -31,7 +32,8 @@ class ChexpertDataset(data.Dataset):
         self.transforms = transforms.Compose([
             transforms.RandomCrop((320, 320)),
             transforms.Resize((size, size)),
-            transforms.ToTensor()
+            transforms.ToTensor(),
+            transforms.Normalize(mean=CHEXPERT_MEAN, std=CHEXPERT_STD)
         ])
 
         self.df = self.df[:-(len(self.df)%batch_size)]
