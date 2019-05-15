@@ -77,7 +77,7 @@ def main(args):
         logger = TrainLogger(args, start_epoch, global_step)
 
     # Sampler
-    sampler = get_sampler(args.model, 5, 4, args.size, args.save_dir, device)
+    sampler = get_sampler(args.model, 5, 16, args.size, args.save_dir, device)
 
     for i in range(start_epoch, args.num_epochs):
 
@@ -86,13 +86,24 @@ def main(args):
         logger.start_epoch()
         for j, image in enumerate(train_loader):
 
-            # Sample
-            if j % 500 == 0:
+            # Sample and Eval
+            if j % 500 == 0 and j != 0:
                 print("Sampling...")
                 sampler.sample(model, i, j)
 
-            logger.start_iter()
+                with torch.no_grad():
+                    logger.val_loss_meter.reset()
+                    model.eval()
+                    for image in tqdm(val_loader):
+                        image = image.to(device)
+                        output = model(image)
+                        loss = loss_fn(output, image)
+                        logger.val_loss_meter.update(loss)
+                logger.has_improved(model)
+                logger._log_scalars({'val-loss': logger.val_loss_meter.avg})
+                model.train()
 
+            logger.start_iter()
             image = image.to(device)
             optimizer.zero_grad()
             output = model(image)
@@ -105,17 +116,7 @@ def main(args):
             logger.log_iter(loss)
             logger.end_iter()
 
-        # Eval
-        with torch.no_grad():
-            model.eval()
-            for image in tqdm(val_loader):
-                image = image.to(device)
-                output = model(image)
-                loss = loss_fn(output, image)
-                logger.val_loss_meter.update(loss)
-
-        logger.has_improved(model)
-        logger.end_epoch({'val-loss': logger.val_loss_meter.avg}, optimizer)
+        logger.end_epoch(None, optimizer)
 
 
 if __name__ == '__main__':

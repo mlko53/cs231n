@@ -44,6 +44,6 @@ class GlowLoss(nn.Module):
         prior_ll = prior_ll.flatten(1).sum(-1) \
             - np.log(256.) * np.prod(out.size()[1:])
         ll = prior_ll + sldj
-        nll = -ll.mean() / (out.shape[-1] ** 2)
+        nll = -ll.mean() / (out.shape[-1] ** 2) / out.shape[1]
 
         return nll
