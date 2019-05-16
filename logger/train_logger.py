@@ -80,7 +80,7 @@ class TrainLogger(BaseLogger):
         self.epoch += 1
 
     
-    def has_improved(self, model):
+    def has_improved(self, model, optimizer):
         """
         Reports whether this epochs loss has improved since the last
         Saves model if improvement
@@ -94,8 +94,10 @@ class TrainLogger(BaseLogger):
             print("Saving...")
             state = {
                 'model': model.state_dict(),
+                'optimizer': optimizer.state_dict(),
                 'val_loss': self.val_loss_meter.avg,
-                'epoch': self.epoch + 1
+                'epoch': self.epoch,
+                'iter': self.iter
             }
             torch.save(state, os.path.join(self.save_dir, 'best.pth.tar'))
         else:

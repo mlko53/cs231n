@@ -67,13 +67,16 @@ def main(args):
         print("Resuming from checkpoint at {}".format(resume_path))
         checkpoint = torch.load(resume_path)
         model.load_state_dict(checkpoint['model'])
+        optimizer.load_state_dict(checkpoint['optimizer'])
         start_epoch = checkpoint['epoch']
+        start_iter = checkpoint['iter']
         global_step = start_epoch * len(train_loader)
         logger = TrainLogger(args, start_epoch, global_step)
         logger.best_val_loss = checkpoint['val_loss']
     else:
         start_epoch = 0
         global_step = 0
+        start_iter = 0
         logger = TrainLogger(args, start_epoch, global_step)
 
     # Sampler
@@ -85,6 +88,8 @@ def main(args):
         model.train()
         logger.start_epoch()
         for j, image in enumerate(train_loader):
+            if j < start_iter:
+                continue
 
             # Sample and Eval
             if j % 250 == 0:
@@ -99,7 +104,7 @@ def main(args):
                         output = model(image)
                         loss = loss_fn(output, image)
                         logger.val_loss_meter.update(loss)
-                logger.has_improved(model)
+                logger.has_improved(model, optimizer)
                 logger._log_scalars({'val-loss': logger.val_loss_meter.avg})
                 model.train()
 
@@ -115,8 +120,8 @@ def main(args):
 
             logger.log_iter(loss)
             logger.end_iter()
-
         logger.end_epoch(None, optimizer)
+        start_iter = 0
 
 
 if __name__ == '__main__':
