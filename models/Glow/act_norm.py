@@ -78,8 +78,8 @@ class ActNorm(nn.Module):
         return x, sldj
 
     def forward(self, x, ldj=None, reverse=False):
-        if not self.is_initialized:
-            self.initialize_parameters(x)
+        #if not self.is_initialized:
+        #    self.initialize_parameters(x)
 
         if reverse:
             x, ldj = self._scale(x, ldj, reverse)
