@@ -37,7 +37,6 @@ class ChexpertDataset(data.Dataset):
         ])
 
         self.df = self.df[:-(len(self.df)%batch_size)]
-        self.df = self.df[:batch_size]
         print(len(self.df))
         
     def __len__(self):
