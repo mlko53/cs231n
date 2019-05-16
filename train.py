@@ -52,7 +52,7 @@ def main(args):
     model = model.to(device)
 
     # Loss fn
-    loss_fn = get_loss(args.model).to(device)
+    loss_fn = get_loss(args.model)
 
     # Data loaders
     train_loader = get_dataloader(args, "train")
@@ -86,6 +86,7 @@ def main(args):
         logger.start_epoch()
         for j, image in enumerate(train_loader):
 
+            """
             # Sample and Eval
             if j % 500 == 0 and j != 0:
                 print("Sampling...")
@@ -102,6 +103,12 @@ def main(args):
                 logger.has_improved(model)
                 logger._log_scalars({'val-loss': logger.val_loss_meter.avg})
                 model.train()
+            """
+
+            random.seed(args.seed)
+            np.random.seed(args.seed)
+            torch.manual_seed(args.seed)
+            torch.cuda.manual_seed_all(args.seed)
 
             logger.start_iter()
             image = image.to(device)
