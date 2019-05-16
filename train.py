@@ -52,7 +52,7 @@ def main(args):
     model = model.to(device)
 
     # Loss fn
-    loss_fn = get_loss(args.model).to(device)
+    loss_fn = get_loss(args.model)
 
     # Data loaders
     train_loader = get_dataloader(args, "train")
@@ -87,12 +87,13 @@ def main(args):
         for j, image in enumerate(train_loader):
 
             # Sample
-            if j % 500 == 0:
+            if j % 500 == 0 and j != 0:
                 print("Sampling...")
                 sampler.sample(model, i, j)
 
             logger.start_iter()
 
+            model.train()
             image = image.to(device)
             optimizer.zero_grad()
             output = model(image)
