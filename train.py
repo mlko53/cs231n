@@ -87,7 +87,7 @@ def main(args):
         for j, image in enumerate(train_loader):
 
             # Sample and Eval
-            if j % 500 == 0:
+            if j % 250 == 0:
                 print("Sampling...")
                 sampler.sample(model, i, j)
 
