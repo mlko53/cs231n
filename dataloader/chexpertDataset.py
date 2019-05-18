@@ -43,7 +43,7 @@ class ChexpertDataset(data.Dataset):
         return len(self.df)
 
     def __getitem__(self, index):
-        x = self.transforms(Image.open(DATA_DIR / self.df.iloc[index]["Path"]).convert("RGB"))
+        x = self.transforms(Image.open(DATA_DIR / self.df.iloc[index]["Path"]).convert("L"))
         # TODO implement label indexing
         y = None
 
