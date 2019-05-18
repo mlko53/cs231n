@@ -63,7 +63,7 @@ def main(args):
 
     # Logger and Resume
     if args.resume:
-        resume_path = os.path.join(args.save_dir, "best.pth.tar")
+        resume_path = os.path.join(args.save_dir, "current.pth.tar")
         print("Resuming from checkpoint at {}".format(resume_path))
         checkpoint = torch.load(resume_path)
         model.load_state_dict(checkpoint['model'])
@@ -89,6 +89,7 @@ def main(args):
         logger.start_epoch()
         for j, image in enumerate(train_loader):
             if j < start_iter:
+                logger.end_iter()
                 continue
 
             # Sample and Eval
@@ -104,7 +105,7 @@ def main(args):
                         output = model(image)
                         loss = loss_fn(output, image)
                         logger.val_loss_meter.update(loss)
-                logger.has_improved(model, optimizer)
+                logger.has_improved(model, optimizer, j)
                 logger._log_scalars({'val-loss': logger.val_loss_meter.avg})
                 model.train()
 
