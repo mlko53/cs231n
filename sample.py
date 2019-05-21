@@ -39,7 +39,7 @@ class GlowSampler(object):
             model.eval()
             for i in range(self.num_samples):
                 print("Sample{}".format(i))
-                z = torch.randn((self.batch_size, 3, self.size, self.size), dtype=torch.float32, device=self.device)
+                z = torch.randn((self.batch_size, 1, self.size, self.size), dtype=torch.float32, device=self.device)
                 sample, _ = model(z, reverse=True)
                 sample = torch.sigmoid(sample)
 

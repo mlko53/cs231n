@@ -14,6 +14,6 @@ def get_dataloader(args, split):
         raise ValueError("Dataset is not supported")
 
     loader = data.DataLoader(dataset, batch_size=args.batch_size, 
-                             shuffle=True, num_workers=0)
+                             shuffle=True, num_workers=4)
 
     return loader

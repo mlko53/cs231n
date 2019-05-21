@@ -80,7 +80,7 @@ def main(args):
         logger = TrainLogger(args, start_epoch, global_step)
 
     # Sampler
-    sampler = get_sampler(args.model, 5, 16, args.size, args.save_dir, device)
+    sampler = get_sampler(args.model, 0, 16, args.size, args.save_dir, device)
 
     for i in range(start_epoch, args.num_epochs):
 

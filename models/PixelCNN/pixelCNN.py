@@ -15,7 +15,7 @@ class PixelCNN(nn.Module):
     def __init__(self, args, device):
         super(PixelCNN, self).__init__()
         self.device = device
-        self.conv_mask_A = ConvMaskABlock(3, args.num_channels, 7, 1, 3, self.device)
+        self.conv_mask_A = ConvMaskABlock(1, args.num_channels, 7, 1, 3, self.device)
 
         self.conv_mask_Bs = []
         for i in range(args.num_levels):
@@ -27,7 +27,7 @@ class PixelCNN(nn.Module):
             nn.Conv2d(args.num_channels, 1024, 1, 1, 0),
             nn.BatchNorm2d(1024),
             nn.ReLU(),
-            nn.Conv2d(1024, 3*256, 1, 1, 0)
+            nn.Conv2d(1024, 1*256, 1, 1, 0)
         )
 
         self.loss_fn = nn.CrossEntropyLoss()
