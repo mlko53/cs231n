@@ -52,7 +52,7 @@ def main(args):
     model = model.to(device)
 
     # Loss fn
-    loss_fn = get_loss(args.model).to(device)
+    loss_fn = get_loss(args.model)
 
     # Data loaders
     train_loader = get_dataloader(args, "train")
@@ -63,21 +63,26 @@ def main(args):
 
     # Logger and Resume
     if args.resume:
-        resume_path = os.path.join(args.save_dir, "best.pth.tar")
+        resume_path = os.path.join(args.save_dir, "current.pth.tar")
         print("Resuming from checkpoint at {}".format(resume_path))
         checkpoint = torch.load(resume_path)
         model.load_state_dict(checkpoint['model'])
+        optimizer.load_state_dict(checkpoint['optimizer'])
         start_epoch = checkpoint['epoch']
+        start_iter = checkpoint['iter']
         global_step = start_epoch * len(train_loader)
         logger = TrainLogger(args, start_epoch, global_step)
         logger.best_val_loss = checkpoint['val_loss']
+        print(start_epoch)
+        print(start_iter)
     else:
         start_epoch = 0
         global_step = 0
+        start_iter = 0
         logger = TrainLogger(args, start_epoch, global_step)
 
     # Sampler
-    sampler = get_sampler(args.model, 5, 4, args.size, args.save_dir, device)
+    sampler = get_sampler(args.model, 1, 16, args.size, args.input_c, args.save_dir, device)
 
     for i in range(start_epoch, args.num_epochs):
 
@@ -85,14 +90,28 @@ def main(args):
         model.train()
         logger.start_epoch()
         for j, image in enumerate(train_loader):
+            if j < start_iter:
+                logger.end_iter()
+                continue
 
-            # Sample
-            if j % 500 == 0:
+            # Sample and Eval
+            if j % 250 == 0:
                 print("Sampling...")
                 sampler.sample(model, i, j)
 
-            logger.start_iter()
+                with torch.no_grad():
+                    logger.val_loss_meter.reset()
+                    model.eval()
+                    for image in tqdm(val_loader):
+                        image = image.to(device)
+                        output = model(image)
+                        loss = loss_fn(output, image)
+                        logger.val_loss_meter.update(loss)
+                logger.has_improved(model, optimizer, j)
+                logger._log_scalars({'val-loss': logger.val_loss_meter.avg})
+                model.train()
 
+            logger.start_iter()
             image = image.to(device)
             optimizer.zero_grad()
             output = model(image)
@@ -104,18 +123,8 @@ def main(args):
 
             logger.log_iter(loss)
             logger.end_iter()
-
-        # Eval
-        with torch.no_grad():
-            model.eval()
-            for image in tqdm(val_loader):
-                image = image.to(device)
-                output = model(image)
-                loss = loss_fn(output, image)
-                logger.val_loss_meter.update(loss)
-
-        logger.has_improved(model)
-        logger.end_epoch({'val-loss': logger.val_loss_meter.avg}, optimizer)
+        logger.end_epoch(None, optimizer)
+        start_iter = 0
 
 
 if __name__ == '__main__':

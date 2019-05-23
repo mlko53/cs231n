@@ -13,10 +13,11 @@ class TrainArgParser(object):
         # dataset config
         self.parser.add_argument("--dataset", type=str, default='chexpert', choices=['random', 'chexpert'])
         self.parser.add_argument("--size", type=int, default=64)
+        self.parser.add_argument("--input_c", type=int, default=1, choices=[1, 3])
 
 	# model config
         self.parser.add_argument('--model', default='PixelCNN', type=str, choices=['PixelCNN', 'Glow'])
-        self.parser.add_argument('--num_channels', '-C', default=128, type=int, help='Number of channels in hidden layers')
+        self.parser.add_argument('--num_channels', '-C', default=512, type=int, help='Number of channels in hidden layers')
         self.parser.add_argument('--num_levels', '-L', default=3, type=int, help='Number of levels in the Glow model')
         self.parser.add_argument('--num_steps', '-K', default=32, type=int, help='Number of steps of flow in each level')
 
