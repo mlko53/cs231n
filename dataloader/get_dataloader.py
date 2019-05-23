@@ -9,7 +9,7 @@ def get_dataloader(args, split):
     if args.dataset == "random":
         dataset = RandomDataset(split, args.batch_size)
     elif args.dataset == "chexpert":
-        dataset = ChexpertDataset(split, args.batch_size, args.size)
+        dataset = ChexpertDataset(split, args.batch_size, args.size, args.input_c)
     else:
         raise ValueError("Dataset is not supported")
 

@@ -73,6 +73,8 @@ def main(args):
         global_step = start_epoch * len(train_loader)
         logger = TrainLogger(args, start_epoch, global_step)
         logger.best_val_loss = checkpoint['val_loss']
+        print(start_epoch)
+        print(start_iter)
     else:
         start_epoch = 0
         global_step = 0
@@ -80,7 +82,7 @@ def main(args):
         logger = TrainLogger(args, start_epoch, global_step)
 
     # Sampler
-    sampler = get_sampler(args.model, 0, 16, args.size, args.save_dir, device)
+    sampler = get_sampler(args.model, 1, 16, args.size, args.save_dir, device)
 
     for i in range(start_epoch, args.num_epochs):
 

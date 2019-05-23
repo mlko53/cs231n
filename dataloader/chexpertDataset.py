@@ -13,9 +13,13 @@ CHEXPERT_DIR = DATA_DIR / "CheXpert-v1.0-small"
 CHEXPERT_MEAN = [.5020, .5020, .5020]
 CHEXPERT_STD = [.085585, .085585, .085585]
 
+NO_FINDING = "No Finding"
+MAIN_CATEGORIES = ["Atelectasis", "Caardiomegaly", "Consolidation", "Edema", "Pleural Effusion"]
+ALL_CATEGORIES = ['Enlarged Cardiomediastinum', 'Cardiomegaly', 'Lung Opacity', 'Lung Lesion', 'Edema', 'Consolidation', 'Pneumonia', 'Atelectasis', 'Pneumothorax', 'Pleural Effusion', 'Pleural Other', 'Fracture', 'Support Devices']
+
 class ChexpertDataset(data.Dataset):
-    """Dataset of random 224x224 images"""
-    def __init__(self, split, batch_size, size):
+    """Chexpert Dataset of specified size and input channel"""
+    def __init__(self, split, batch_size, size, input_c):
         super(ChexpertDataset, self).__init__()
         self.split = split
         self.size = size
@@ -43,8 +47,12 @@ class ChexpertDataset(data.Dataset):
         return len(self.df)
 
     def __getitem__(self, index):
-        x = self.transforms(Image.open(DATA_DIR / self.df.iloc[index]["Path"]).convert("L"))
-        # TODO implement label indexing
-        y = None
+        x = self.transforms(Image.open(DATA_DIR / self.df.iloc[index]["Path"])
+        if input_c == 1:
+            x = x.convert("L")
+        elif input_c == 3:
+            x = x.convert("RGB")
+        else:
+            raise ValueError("Input channel must be 1 or 3")
 
         return x

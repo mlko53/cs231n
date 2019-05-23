@@ -13,6 +13,7 @@ class TrainArgParser(object):
         # dataset config
         self.parser.add_argument("--dataset", type=str, default='chexpert', choices=['random', 'chexpert'])
         self.parser.add_argument("--size", type=int, default=64)
+        self.parser.add_argument("--input_c", type=int, default=1, choices=[1, 3])
 
 	# model config
         self.parser.add_argument('--model', default='PixelCNN', type=str, choices=['PixelCNN', 'Glow'])
