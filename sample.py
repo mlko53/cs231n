@@ -15,11 +15,11 @@ import numpy as np
 import random
 import os
 
-def get_sampler(model, num_samples, batch_size, size, save_dir, device):
+def get_sampler(model, num_samples, batch_size, size, input_c, save_dir, device):
     if model == "PixelCNN":
-        sampler = PixelCNNSampler(num_samples, batch_size, size, save_dir, device)
+        sampler = PixelCNNSampler(num_samples, batch_size, size, input_c, save_dir, device)
     elif model == "Glow":
-        sampler = GlowSampler(num_samples, batch_size, size, save_dir, device)
+        sampler = GlowSampler(num_samples, batch_size, size, input_c, save_dir, device)
     else:
         raise ValueError()
 
@@ -27,7 +27,7 @@ def get_sampler(model, num_samples, batch_size, size, save_dir, device):
 
 
 class GlowSampler(object):
-    def __init__(self, num_samples, batch_size, size, save_dir, device):
+    def __init__(self, num_samples, batch_size, size, input_c, save_dir, device):
         self.batch_size = batch_size
         self.size = size
         self.num_samples = num_samples 
@@ -39,7 +39,7 @@ class GlowSampler(object):
             model.eval()
             for i in range(self.num_samples):
                 print("Sample{}".format(i))
-                z = torch.randn((self.batch_size, 1, self.size, self.size), dtype=torch.float32, device=self.device)
+                z = torch.randn((self.batch_size, input_c, self.size, self.size), dtype=torch.float32, device=self.device)
                 sample, _ = model(z, reverse=True)
                 sample = torch.sigmoid(sample)
 
@@ -48,7 +48,7 @@ class GlowSampler(object):
 
 
 class PixelCNNSampler(object):
-    def __init__(self, num_samples, batch_size, size, save_dir, device):
+    def __init__(self, num_samples, batch_size, size, input_c, save_dir, device):
         self.batch_size = batch_size
         self.size = size
         self.num_samples = num_samples 
@@ -60,12 +60,12 @@ class PixelCNNSampler(object):
             model.eval()
             for i in range(self.num_samples):
                 print("Sample{}".format(i))
-                sample = torch.zeros(self.batch_size, 3, self.size, self.size).to(self.device)
+                sample = torch.zeros(self.batch_size, input_c, self.size, self.size).to(self.device)
                 for x in tqdm(range(self.size)):
                     for y in range(self.size):
                         out = model(Variable(sample))
                         probs = F.softmax(out[:,:,x,y], dim=2).data
-                        for c in range(3):
+                        for c in range(input_c):
                             pixel = torch.multinomial(probs[:,c], 1).float() / 255.
                             sample[:,c,x,y] = pixel[:,0]
 
@@ -100,7 +100,8 @@ if __name__ == '__main__':
     checkpoint = torch.load(resume_path)
     model.load_state_dict(checkpoint['model'])
     start_epoch = checkpoint['epoch']
+    start_iter = checkpoint['iter']
 
     print("Sampling...")
-    sampler = PixelCNNSampler(5, args.batch_size, args.save_dir, device)
-    sampler.sample(model, start_epoch)
+    sampler = PixelCNNSampler(5, args.batch_size, args.size, args.input_c, args.save_dir, device)
+    sampler.sample(model, start_epoch, start_iter)
