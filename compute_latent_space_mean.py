@@ -5,6 +5,7 @@ from pathlib import Path
 import random
 import torch
 import torch.nn as nn
+from torchvision.utils import save_image
 
 from dataloader import *
 from tqdm import tqdm
@@ -26,7 +27,9 @@ if __name__ == '__main__':
     parser.add_argument('--size', default=128, type=int)
 
     args = parser.parse_args()
-    args.save_dir = Path("./experiments") / "Glow" / args.name
+    save_dir = Path("./experiments") / "Glow" / args.name
+    (save_dir / "latents").mkdir(parents=True, exist_ok=True)
+    args.save_dir = save_dir
 
     # Set up main device and scale batch size
     device = 'cuda' if torch.cuda.is_available() and args.gpu_ids else 'cpu'
@@ -53,8 +56,24 @@ if __name__ == '__main__':
     start_iter = checkpoint['iter']
     print("Starting from epoch {}, iter {}".format(start_epoch, start_iter))
 
+    # Set model to eval
+    model.eval()
+
     print("Computing mean from these pathology")
     print(MAIN_CATEGORIES)
     for category in MAIN_CATEGORIES:
         print("[{}]".format(category))
         dataloader = get_dataloader(args, "train", category)
+        running_avg = torch.zeros((args.input_c, args.size, args.size)).to(device)
+        with torch.no_grad():
+            for i, image in tqdm(enumerate(dataloader)):
+                image = image.to(device)
+                z = model(image)[0]
+                z = z.mean(dim=0)
+                running_avg = (i / (i+1)) * running_avg + (1 / (i+1)) * z
+                if i > 100:
+                    break
+            torch.save(running_avg, args.save_dir / "latents/{}.pt".format(category))
+            sample, _ = model(torch.stack([running_avg]*4), reverse=True) # make batch size 4 so that model doesn't complain
+            sample = torch.sigmoid(sample)
+            save_image(sample[0,:,:,:], args.save_dir / "latents/{}.png".format(category))
