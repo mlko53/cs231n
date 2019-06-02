@@ -23,8 +23,10 @@ if __name__ == '__main__':
     parser.add_argument('--num_channels', '-C', default=512, type=int, help='Number of channels in hidden layers')
     parser.add_argument('--num_levels', '-L', default=3, type=int, help='Number of levels in the Glow model')
     parser.add_argument('--num_steps', '-K', default=32, type=int, help='Number of steps of flow in each level')
-    parser.add_argument('--seed', type=int, default=0, help='Random seed for reproducibility')
     parser.add_argument('--size', default=128, type=int)
+    
+    parser.add_argument('--num_samples', default=20, type=int)
+    parser.add_argument('--nrow', default=8, type=int)
 
     args = parser.parse_args()
     save_dir = Path("./experiments") / "Glow" / args.name
@@ -34,12 +36,6 @@ if __name__ == '__main__':
     # Set up main device and scale batch size
     device = 'cuda' if torch.cuda.is_available() and args.gpu_ids else 'cpu'
     print(device)
-
-    # Set random seeds
-    random.seed(args.seed)
-    np.random.seed(args.seed)
-    torch.manual_seed(args.seed)
-    torch.cuda.manual_seed_all(args.seed)
 
     # Build Model
     print("Building model...")
@@ -59,19 +55,39 @@ if __name__ == '__main__':
     # Set model to eval
     model.eval()
 
-    print("Computing mean from these pathology")
-    print(ALL_CATEGORIES)
-    for category in ALL_CATEGORIES:
-        print("[{}]".format(category))
-        dataloader = get_dataloader(args, "train", category)
-        running_avg = torch.zeros((args.input_c, args.size, args.size)).to(device)
+    print("Loading normal images")
+    normal_data = ChexpertDataset("train", args.batch_size, args.size, args.input_c, NO_FINDING)
+
+    print("Loading latent means and computing manipulation vector")
+    no_finding = torch.load(args.save_dir / f"latents/{NO_FINDING}.pt")
+    latents = {}
+    for category in MAIN_CATEGORIES:
+        path = args.save_dir / "latents/{}.pt".format(category)
+        latents[category] = torch.load(path) - no_finding
+        latents[category].to(device)
+    
+    print("Generating manipulation images")
+    manipulations = list(latents.values())
+    manipulations = torch.stack(manipulations)
+    manipulations = manipulations.expand(len(MAIN_CATEGORIES), args.nrow,
+                                         args.size, args.size)
+    manipulations = manipulations[:,:,None,:,:]
+    step = torch.Tensor(np.linspace(0., 2., args.nrow)).to(device)
+    manipulations = torch.einsum('abcde,b->abcde', (manipulations, step))
+    del latents
+    for i in tqdm(range(args.num_samples)):
         with torch.no_grad():
-            for i, image in tqdm(enumerate(dataloader)):
-                image = image.to(device)
-                z = model(image)[0]
-                z = z.mean(dim=0)
-                running_avg = (i / (i+1)) * running_avg + (1 / (i+1)) * z
-            torch.save(running_avg, args.save_dir / "latents/{}.pt".format(category))
-            sample, _ = model(torch.stack([running_avg]*4), reverse=True) # make batch size 4 so that model doesn't complain
-            sample = torch.sigmoid(sample)
-            save_image(sample[0,:,:,:], args.save_dir / "latents/{}.png".format(category))
+            rand_idx = random.randint(0, len(normal_data))
+            image = normal_data[rand_idx][None,:,:,:]
+            image.to(device)
+            save_image(image, args.save_dir / "latents/original_{}.png".format(i))
+            z = model(image)[0]
+            z = z[0]
+            z = z.expand(len(MAIN_CATEGORIES), args.nrow, *z.size())
+            z = z + manipulations
+            for j in range(z.shape[0]):
+                image = model(z[j], reverse=True)[0]
+                z[j] = image
+            z = z.view(-1, args.input_c, args.size, args.size)
+            z = torch.sigmoid(z)
+            save_image(z, args.save_dir / "latents/interpolation_{}.png".format(i), nrow=args.nrow)

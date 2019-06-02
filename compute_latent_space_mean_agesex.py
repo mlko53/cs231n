@@ -59,19 +59,26 @@ if __name__ == '__main__':
     # Set model to eval
     model.eval()
 
-    print("Computing mean from these pathology")
-    print(ALL_CATEGORIES)
-    for category in ALL_CATEGORIES:
-        print("[{}]".format(category))
-        dataloader = get_dataloader(args, "train", category)
-        running_avg = torch.zeros((args.input_c, args.size, args.size)).to(device)
-        with torch.no_grad():
-            for i, image in tqdm(enumerate(dataloader)):
-                image = image.to(device)
-                z = model(image)[0]
-                z = z.mean(dim=0)
-                running_avg = (i / (i+1)) * running_avg + (1 / (i+1)) * z
-            torch.save(running_avg, args.save_dir / "latents/{}.pt".format(category))
-            sample, _ = model(torch.stack([running_avg]*4), reverse=True) # make batch size 4 so that model doesn't complain
-            sample = torch.sigmoid(sample)
-            save_image(sample[0,:,:,:], args.save_dir / "latents/{}.png".format(category))
+    latents = {}
+    latents["Female"] = (torch.zeros((args.input_c, args.size, args.size)).to(device), 0)
+    latents["Male"] = (torch.zeros((args.input_c, args.size, args.size)).to(device), 0)
+    for i in range(10):
+        latents[str(i)] = (torch.zeros((args.input_c, args.size, args.size)).to(device), 0)
+
+    dataloader = ChexpertDataset("train", args.batch_size, args.size, args.input_c, None, agesex=True)
+    for i in tqdm(range(len(dataloader))):
+        image, sex, age = dataloader[i]
+        image = image[None,:,:,:]
+        image.to(device)
+        z = model(image)[0]
+        z = z[0]
+
+        # update sex latents
+        c = latents[sex][1]
+        m = latents[sex][0]
+        latents[sex][0] = (c / (c+1))*m + (1/(c+1))*z
+        latents[sex][1] = c+1
+
+        # update age latents
+        c = lantents[str(age // 10)][1]
+        m = latents[str(age // 10)][0]
