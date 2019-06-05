@@ -4,12 +4,12 @@ from .chexpertDataset import ChexpertDataset
 from .randomDataset import RandomDataset
 
 
-def get_dataloader(args, split):
+def get_dataloader(args, split, pathology=None):
 
     if args.dataset == "random":
         dataset = RandomDataset(split, args.batch_size)
     elif args.dataset == "chexpert":
-        dataset = ChexpertDataset(split, args.batch_size, args.size, args.input_c)
+        dataset = ChexpertDataset(split, args.batch_size, args.size, args.input_c, pathology)
     else:
         raise ValueError("Dataset is not supported")
 

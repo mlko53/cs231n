@@ -33,13 +33,14 @@ class GlowSampler(object):
         self.num_samples = num_samples 
         self.save_dir = save_dir
         self.device = device
+        self.input_c = input_c
     
     def sample(self, model, epoch, iter):
         with torch.no_grad():
             model.eval()
             for i in range(self.num_samples):
                 print("Sample{}".format(i))
-                z = torch.randn((self.batch_size, input_c, self.size, self.size), dtype=torch.float32, device=self.device)
+                z = torch.randn((self.batch_size, self.input_c, self.size, self.size), dtype=torch.float32, device=self.device)
                 sample, _ = model(z, reverse=True)
                 sample = torch.sigmoid(sample)
 
@@ -54,18 +55,19 @@ class PixelCNNSampler(object):
         self.num_samples = num_samples 
         self.save_dir = save_dir
         self.device = device
+        self.input_c = input_c
 
     def sample(self, model, epoch, iter):
         with torch.no_grad():
             model.eval()
             for i in range(self.num_samples):
                 print("Sample{}".format(i))
-                sample = torch.zeros(self.batch_size, input_c, self.size, self.size).to(self.device)
+                sample = torch.zeros(self.batch_size, self.input_c, self.size, self.size).to(self.device)
                 for x in tqdm(range(self.size)):
                     for y in range(self.size):
                         out = model(Variable(sample))
                         probs = F.softmax(out[:,:,x,y], dim=2).data
-                        for c in range(input_c):
+                        for c in range(self.input_c):
                             pixel = torch.multinomial(probs[:,c], 1).float() / 255.
                             sample[:,c,x,y] = pixel[:,0]
 
