@@ -26,7 +26,7 @@ if __name__ == '__main__':
     parser.add_argument('--size', default=128, type=int)
     
     parser.add_argument('--num_samples', default=20, type=int)
-    parser.add_argument('--nrow', default=8, type=int)
+    parser.add_argument('--nrow', default=7, type=int)
 
     args = parser.parse_args()
     save_dir = Path("./experiments") / "Glow" / args.name
@@ -58,36 +58,76 @@ if __name__ == '__main__':
     print("Loading normal images")
     normal_data = ChexpertDataset("train", args.batch_size, args.size, args.input_c, NO_FINDING)
 
-    print("Loading latent means and computing manipulation vector")
+    def generate_from_latents(latents, alpha, args, name, dataset, gen_model):
+        manipulations = list(latents.values())
+        manipulations = torch.stack(manipulations)
+        manipulations = manipulations.expand(len(latents), args.nrow,
+                                             args.size, args.size)
+        manipulations = manipulations[:,:,None,:,:]
+        step = torch.Tensor(np.linspace(-alpha, alpha, args.nrow)).to(device)
+        manipulations = torch.einsum('abcde,b->abcde', (manipulations, step))
+        for i in tqdm(range(args.num_samples)):
+            with torch.no_grad():
+                rand_idx = random.randint(0, len(dataset))
+                image = dataset[rand_idx][None,:,:,:]
+                image.to(device)
+                z = gen_model(image)[0]
+                z = z[0]
+                z = z.expand(len(latents), args.nrow, *z.size())
+                z = z + manipulations
+                for j in range(z.shape[0]):
+                    image = gen_model.forward(z[j], True)[0]
+                    z[j] = image
+                z = z.view(-1, args.input_c, args.size, args.size)
+                z = torch.sigmoid(z)
+                save_image(z, args.save_dir / "latents/{}_{}.png".format(name, i), nrow=args.nrow)
+
+    print("Generating manipulation images for age and sex")
+    no_finding = torch.load(args.save_dir / f"latents/{NO_FINDING}.pt")
+    latents = {}
+    latents['80'] = torch.load(args.save_dir / "latents/8.pt") - no_finding
+    generate_from_latents(latents, 1., args, "age_interpolation", normal_data, model)
+
+    latents = {}
+    latents['female'] = torch.load(args.save_dir / "latents/Female.pt") - torch.load(args.save_dir / "latents/Male.pt")
+    generate_from_latents(latents, 1., args, "gender_interpolation", normal_data, model)
+
+    """
+    print("Generating manipulation images from main categories")
     no_finding = torch.load(args.save_dir / f"latents/{NO_FINDING}.pt")
     latents = {}
     for category in MAIN_CATEGORIES:
         path = args.save_dir / "latents/{}.pt".format(category)
         latents[category] = torch.load(path) - no_finding
         latents[category].to(device)
+    generate_from_latents(latents, 1.5, args, "main_interpolation", normal_data, model)
     
-    print("Generating manipulation images")
-    manipulations = list(latents.values())
-    manipulations = torch.stack(manipulations)
-    manipulations = manipulations.expand(len(MAIN_CATEGORIES), args.nrow,
-                                         args.size, args.size)
-    manipulations = manipulations[:,:,None,:,:]
-    step = torch.Tensor(np.linspace(0., 2., args.nrow)).to(device)
-    manipulations = torch.einsum('abcde,b->abcde', (manipulations, step))
-    del latents
-    for i in tqdm(range(args.num_samples)):
+    print("Generating manipulationg images for other categories")
+    other_categories = list(set(ALL_CATEGORIES) - set(MAIN_CATEGORIES))
+    latents = {}
+    for category in other_categories:
+        path = args.save_dir / "latents/{}.pt".format(category)
+        latents[category] = torch.load(path) - no_finding
+        latents[category].to(device)
+    generate_from_latents(latents, 1.5, args, "other_interpolation", normal_data, model)
+
+    print("Linear interpolation")
+    del normal_data
+    dataset = ChexpertDataset("train", args.batch_size, args.size, args.input_c, None)
+    for i in range(args.num_samples):
         with torch.no_grad():
-            rand_idx = random.randint(0, len(normal_data))
-            image = normal_data[rand_idx][None,:,:,:]
-            image.to(device)
-            save_image(image, args.save_dir / "latents/original_{}.png".format(i))
-            z = model(image)[0]
-            z = z[0]
-            z = z.expand(len(MAIN_CATEGORIES), args.nrow, *z.size())
-            z = z + manipulations
-            for j in range(z.shape[0]):
-                image = model(z[j], reverse=True)[0]
-                z[j] = image
-            z = z.view(-1, args.input_c, args.size, args.size)
-            z = torch.sigmoid(z)
-            save_image(z, args.save_dir / "latents/interpolation_{}.png".format(i), nrow=args.nrow)
+            x = random.randint(0, len(dataset))
+            y = random.randint(0, len(dataset))
+            image_x = dataset[x][None,:,:,:]
+            image_y = dataset[y][None,:,:,:]
+            z_x = model(image_x)[0][0]
+            z_y = model(image_y)[0][0]
+            z = []
+            for a in np.linspace(0,1,9):
+                mix = a * z_x + (1.-a)*z_y
+                z.append(mix)
+            z = torch.stack(z)
+            image = model.forward(z, True)[0]
+            image = torch.sigmoid(image)
+            save_image(image, args.save_dir / "latents/linear_interpolation_{}.png".format(i), nrow=9)
+      """

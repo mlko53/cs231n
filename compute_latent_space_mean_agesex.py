@@ -65,20 +65,32 @@ if __name__ == '__main__':
     for i in range(10):
         latents[str(i)] = (torch.zeros((args.input_c, args.size, args.size)).to(device), 0)
 
-    dataloader = ChexpertDataset("train", args.batch_size, args.size, args.input_c, None, agesex=True)
-    for i in tqdm(range(len(dataloader))):
-        image, sex, age = dataloader[i]
+    dataset = ChexpertDataset("train", args.batch_size, args.size, args.input_c, None, agesex=True)
+    dataset.df = dataset.df[:5000]
+
+    for i in tqdm(range(len(dataset))):
+        image, sex, age = dataset[i]
         image = image[None,:,:,:]
         image.to(device)
         z = model(image)[0]
         z = z[0]
 
         # update sex latents
-        c = latents[sex][1]
-        m = latents[sex][0]
-        latents[sex][0] = (c / (c+1))*m + (1/(c+1))*z
-        latents[sex][1] = c+1
+        if sex in latents.keys():
+            c = latents[sex][1]
+            m = latents[sex][0]
+            new_m  = (c / (c+1))*m + (1/(c+1))*z
+            new_c = c+1
+            latents[sex] = (new_m, new_c)
 
         # update age latents
-        c = lantents[str(age // 10)][1]
-        m = latents[str(age // 10)][0]
+        if str(age // 10) in  latents.keys():
+            c = latents[str(age // 10)][1]
+            m = latents[str(age // 10)][0]
+            new_m  = (c / (c+1))*m + (1/(c+1))*z
+            new_c = c+1
+            latents[sex] = (new_m, new_c)
+
+    for k, v in latents.items():
+        latent = v[0]
+        torch.save(latent, args.save_dir / "latents/{}.pt".format(k))

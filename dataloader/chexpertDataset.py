@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import random
 import numpy as np
 import pandas as pd
 import torch
@@ -7,6 +8,7 @@ import torch
 from PIL import Image
 from torch.utils import data
 import torchvision.transforms as transforms
+from torchvision.utils import save_image
 
 DATA_DIR = Path("/deep/group/CheXpert")
 CHEXPERT_DIR = DATA_DIR / "CheXpert-v1.0-small"
@@ -61,6 +63,8 @@ class ChexpertDataset(data.Dataset):
         print("Length of dataset: {}". format(len(self.df)))
         print("Min age in dataset: {}".format(self.df['Age'].min()))
         print("Max age in dataset: {}".format(self.df['Age'].max()))
+
+        self.df.reset_index(drop=True, inplace=True)
         
     def __len__(self):
         return len(self.df)
@@ -75,6 +79,20 @@ class ChexpertDataset(data.Dataset):
             raise ValueError("Input channel must be 1 or 3")
 
         if self.agesex:
-            return (x, self.df.loc[index, "SEX"], self.df.loc[index,"Age"])
+            return (x, self.df.loc[index, "Sex"], self.df.loc[index,"Age"])
         else:
             return x
+
+
+if __name__ == "__main__":
+    
+    sizes = [32, 64, 128]
+    for size in sizes:
+        dataset = ChexpertDataset("train", 1, size, 1, None)
+        samples = []
+        for i in range(16):
+            idx = random.randint(0, len(dataset))
+            image = dataset[idx]
+            samples.append(image)
+        samples = torch.stack(samples)
+        save_image(samples, "dataset_samples_{}.png".format(size), nrow=4)
